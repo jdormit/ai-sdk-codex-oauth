@@ -60,11 +60,11 @@ for await (const chunk of result.textStream) {
 
 ## Authentication
 
-The `authenticate()` function handles the full auth lifecycle and returns an `Auth` object that you pass to `createCodexOAuth()`:
+The `authenticate()` function handles the full auth lifecycle and returns an `Auth` object that you pass to `createCodexOAuth()`. It is safe to call on every app start — if valid tokens exist in storage, it returns immediately without any network calls or user interaction.
 
-1. Checks storage for valid, non-expired tokens
-2. If tokens are expired, attempts a refresh
-3. Otherwise, initiates the OAuth device code flow
+1. Checks storage for valid, non-expired tokens — returns immediately if found
+2. If tokens are expired, attempts a silent refresh
+3. Otherwise, initiates the OAuth device code flow (calls `onUserCode`)
 
 | Option | Required | Description |
 |---|---|---|
