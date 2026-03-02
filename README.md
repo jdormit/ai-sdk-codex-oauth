@@ -54,7 +54,7 @@ const result = streamText({
 });
 
 for await (const chunk of result.textStream) {
-  process.stdout.write(chunk);
+  console.log(chunk);
 }
 ```
 
