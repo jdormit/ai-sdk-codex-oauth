@@ -14,7 +14,12 @@ npm install ai-sdk-codex-oauth ai
 import { authenticate, createCodexOAuth } from "ai-sdk-codex-oauth";
 import { generateText } from "ai";
 
-const auth = await authenticate({ openBrowser: true });
+const auth = await authenticate({
+  onUserCode: ({ userCode, verifyUrl }) => {
+    console.log(`Go to ${verifyUrl} and enter: ${userCode}`);
+  },
+  openBrowser: true,
+});
 const codex = createCodexOAuth({ auth });
 
 const { text } = await generateText({
@@ -63,16 +68,16 @@ The `authenticate()` function handles the full auth lifecycle:
 2. If tokens are expired, attempts a refresh
 3. Otherwise, initiates the OAuth device code flow
 
-| Option | Description |
-|---|---|
-| `storage` | `TokenStorage` instance for persistence (default: in-memory) |
-| `onUserCode` | Callback receiving `{ userCode, verifyUrl }` when the user needs to authorize |
-| `openBrowser` | Auto-open the verification URL (default: `true` unless `onUserCode` is set) |
-| `onStatus` | Callback for status updates during polling |
-| `signal` | `AbortSignal` for cancellation |
-| `timeoutMs` | Max polling time in ms (default: 5 minutes) |
+| Option | Required | Description |
+|---|---|---|
+| `onUserCode` | Yes | Callback receiving `{ userCode, verifyUrl }` — display these to the user |
+| `storage` | No | `TokenStorage` instance for persistence (default: in-memory) |
+| `openBrowser` | No | Auto-open the verification URL (default: `false`) |
+| `onStatus` | No | Callback for status updates during polling |
+| `signal` | No | `AbortSignal` for cancellation |
+| `timeoutMs` | No | Max polling time in ms (default: 5 minutes) |
 
-For Node.js, install the `open` package to enable automatic browser opening:
+If `openBrowser` is `true`, the library opens the verification URL automatically. In Node.js this requires the `open` package:
 
 ```bash
 npm install open

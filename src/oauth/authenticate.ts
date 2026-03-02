@@ -6,6 +6,12 @@ import { exchangeCodeForTokens, buildAuthState, refreshAuthState } from "./token
 import { OAUTH_CLIENT_ID } from "../constants.js";
 
 export interface AuthenticateOptions {
+  /**
+   * Called when the user needs to visit a URL and enter a code.
+   * You must display the `userCode` and `verifyUrl` to the user.
+   */
+  onUserCode: (info: { userCode: string; verifyUrl: string }) => void;
+
   /** Where to persist tokens. Defaults to in-memory. */
   storage?: TokenStorage;
 
@@ -13,19 +19,11 @@ export interface AuthenticateOptions {
   clientId?: string;
 
   /**
-   * Called when the user needs to visit a URL and enter a code.
-   * If not provided and openBrowser is true (default), the URL
-   * will be opened automatically.
-   */
-  onUserCode?: (info: { userCode: string; verifyUrl: string }) => void;
-
-  /**
    * Automatically open the verification URL in the default browser.
    * - Node.js: uses dynamic `import('open')` — install `open` as a dependency
    * - Browser: uses `window.open()`
    *
-   * If `onUserCode` is provided, this defaults to false.
-   * Otherwise, defaults to true.
+   * Default: false.
    */
   openBrowser?: boolean;
 
@@ -49,18 +47,17 @@ export interface AuthenticateOptions {
  * Returns the authenticated state, which is also persisted to storage.
  */
 export async function authenticate(
-  options: AuthenticateOptions = {},
+  options: AuthenticateOptions,
 ): Promise<AuthState> {
   const {
+    onUserCode,
     storage = new MemoryStorage(),
     clientId = OAUTH_CLIENT_ID,
-    onUserCode,
+    openBrowser = false,
     onStatus,
     signal,
     timeoutMs,
   } = options;
-
-  const openBrowser = options.openBrowser ?? (onUserCode == null);
 
   // Step 1: Check for existing valid tokens
   const existing = await storage.load();
@@ -85,18 +82,10 @@ export async function authenticate(
   const { userCode, deviceAuthId, verifyUrl, intervalMs } =
     await initiateDeviceAuth(clientId);
 
-  // Notify the user / open browser
-  if (onUserCode) {
-    onUserCode({ userCode, verifyUrl });
-  }
+  onUserCode({ userCode, verifyUrl });
 
   if (openBrowser) {
     await openVerifyUrl(verifyUrl);
-  }
-
-  if (!onUserCode && !openBrowser) {
-    // Last resort: print to console
-    console.log(`Visit ${verifyUrl} and enter code: ${userCode}`);
   }
 
   // Poll for authorization

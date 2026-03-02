@@ -29,10 +29,12 @@ describe("authenticate", () => {
     const fetchSpy = vi.fn();
     globalThis.fetch = fetchSpy;
 
-    const result = await authenticate({ storage });
+    const onUserCode = vi.fn();
+    const result = await authenticate({ storage, onUserCode });
 
     expect(result).toEqual(validAuth);
     expect(fetchSpy).not.toHaveBeenCalled();
+    expect(onUserCode).not.toHaveBeenCalled();
   });
 
   it("refreshes expired tokens and returns updated state", async () => {
@@ -50,7 +52,7 @@ describe("authenticate", () => {
         }),
     });
 
-    const result = await authenticate({ storage });
+    const result = await authenticate({ storage, onUserCode: vi.fn() });
 
     expect(result.accessToken).toBe("refreshed-token");
     expect(result.refreshToken).toBe("refreshed-refresh");
@@ -154,7 +156,7 @@ describe("authenticate", () => {
         }),
     });
 
-    const result = await authenticate({ storage });
+    const result = await authenticate({ storage, onUserCode: vi.fn() });
     expect(result.accessToken).toBe("refreshed");
   });
 
