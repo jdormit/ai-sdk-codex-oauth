@@ -29,6 +29,7 @@ export {
 } from "./oauth/token.js";
 export { decodeJwtPayload, extractAccountId } from "./oauth/jwt.js";
 export type {
+  Auth,
   AuthState,
   TokenResponse,
   DeviceAuthResult,

@@ -32,7 +32,8 @@ describe("authenticate", () => {
     const onUserCode = vi.fn();
     const result = await authenticate({ storage, onUserCode });
 
-    expect(result).toEqual(validAuth);
+    expect(result.state).toEqual(validAuth);
+    expect(result.storage).toBe(storage);
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(onUserCode).not.toHaveBeenCalled();
   });
@@ -54,11 +55,12 @@ describe("authenticate", () => {
 
     const result = await authenticate({ storage, onUserCode: vi.fn() });
 
-    expect(result.accessToken).toBe("refreshed-token");
-    expect(result.refreshToken).toBe("refreshed-refresh");
-    expect(result.expiresAt).toBeGreaterThan(Date.now());
+    expect(result.state.accessToken).toBe("refreshed-token");
+    expect(result.state.refreshToken).toBe("refreshed-refresh");
+    expect(result.state.expiresAt).toBeGreaterThan(Date.now());
     // Should preserve accountId from original state
-    expect(result.accountId).toBe("acct-stored");
+    expect(result.state.accountId).toBe("acct-stored");
+    expect(result.storage).toBe(storage);
 
     // Should also be saved to storage
     const saved = await storage.load();
@@ -132,7 +134,8 @@ describe("authenticate", () => {
       userCode: "TEST-CODE",
       verifyUrl: "https://auth.openai.com/codex/device",
     });
-    expect(result.accessToken).toBe("new-token");
+    expect(result.state.accessToken).toBe("new-token");
+    expect(result.storage).toBe(storage);
   });
 
   it("returns stored tokens that are close to expiry but not yet expired", async () => {
@@ -157,7 +160,7 @@ describe("authenticate", () => {
     });
 
     const result = await authenticate({ storage, onUserCode: vi.fn() });
-    expect(result.accessToken).toBe("refreshed");
+    expect(result.state.accessToken).toBe("refreshed");
   });
 
   it("uses default MemoryStorage when no storage provided", async () => {
@@ -213,6 +216,6 @@ describe("authenticate", () => {
       openBrowser: false,
     });
 
-    expect(result.accessToken).toBe("token");
+    expect(result.state.accessToken).toBe("token");
   });
 });

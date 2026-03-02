@@ -50,16 +50,6 @@ async function init() {
     if (model === DEFAULT_MODEL) opt.selected = true;
     modelSelect.appendChild(opt);
   }
-
-  // Try to restore existing session
-  const existing = await storage.load();
-  if (existing && existing.expiresAt > Date.now() + 60_000) {
-    provider = createCodexOAuth({
-      auth: storage,
-      originator: "codex-chat-example",
-    });
-    showChat();
-  }
 }
 
 // ---- Screens ----
@@ -80,14 +70,14 @@ function showChat() {
 
 // ---- Login flow ----
 
-loginBtn.addEventListener("click", async () => {
+async function doAuth() {
   loginBtn.disabled = true;
   loginStatus.hidden = false;
   loginStatus.className = "status";
   loginStatus.textContent = "Starting authentication...";
 
   try {
-    await authenticate({
+    const auth = await authenticate({
       storage,
       openBrowser: false, // We show the code + link in the UI instead
       onUserCode: ({ userCode, verifyUrl }) => {
@@ -104,7 +94,7 @@ loginBtn.addEventListener("click", async () => {
     });
 
     provider = createCodexOAuth({
-      auth: storage,
+      auth,
       originator: "codex-chat-example",
     });
     showChat();
@@ -114,7 +104,9 @@ loginBtn.addEventListener("click", async () => {
     loginBtn.disabled = false;
     deviceCodeEl.hidden = true;
   }
-});
+}
+
+loginBtn.addEventListener("click", doAuth);
 
 // ---- Logout ----
 
@@ -222,4 +214,8 @@ function scrollToBottom() {
 
 // ---- Go ----
 
-init();
+// On load, populate the model selector then attempt auth.
+// If storage has valid tokens, authenticate() returns immediately
+// and we skip straight to the chat screen. Otherwise the login
+// screen is shown and the user clicks the login button.
+init().then(doAuth);

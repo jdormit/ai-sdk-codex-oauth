@@ -30,23 +30,21 @@ const { text } = await generateText({
 
 ## Browser Usage
 
-In the browser, use `LocalStorageTokenStorage` to persist tokens across page reloads, and `onUserCode` to display the login code in your UI:
+In the browser, use `LocalStorageTokenStorage` to persist tokens across page reloads. On subsequent loads, `authenticate()` returns immediately if valid tokens are stored.
 
 ```ts
 import { authenticate, createCodexOAuth, LocalStorageTokenStorage } from "ai-sdk-codex-oauth";
 import { streamText } from "ai";
 
-const storage = new LocalStorageTokenStorage();
-
-await authenticate({
-  storage,
+const auth = await authenticate({
+  storage: new LocalStorageTokenStorage(),
   onUserCode: ({ userCode, verifyUrl }) => {
     // Show the code and link in your UI
     console.log(`Go to ${verifyUrl} and enter: ${userCode}`);
   },
 });
 
-const codex = createCodexOAuth({ auth: storage });
+const codex = createCodexOAuth({ auth });
 
 const result = streamText({
   model: codex("gpt-5.3-codex"),
@@ -62,7 +60,7 @@ for await (const chunk of result.textStream) {
 
 ## Authentication
 
-The `authenticate()` function handles the full auth lifecycle:
+The `authenticate()` function handles the full auth lifecycle and returns an `Auth` object that you pass to `createCodexOAuth()`:
 
 1. Checks storage for valid, non-expired tokens
 2. If tokens are expired, attempts a refresh
@@ -87,8 +85,8 @@ npm install open
 
 ```ts
 const codex = createCodexOAuth({
-  // Required: AuthState object or TokenStorage instance
-  auth: storage,
+  // Required: the Auth object returned by authenticate()
+  auth,
 
   // Optional: identifier sent in the `originator` header (default: "ai-sdk-codex-oauth")
   originator: "my-app",

@@ -15,6 +15,7 @@ export {
 } from "./token.js";
 export { decodeJwtPayload, extractAccountId } from "./jwt.js";
 export type {
+  Auth,
   AuthState,
   TokenResponse,
   DeviceAuthResult,

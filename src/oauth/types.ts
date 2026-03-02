@@ -1,4 +1,4 @@
-/** Persisted authentication state */
+/** Persisted authentication state (serializable) */
 export interface AuthState {
   /** OAuth access token (Bearer token for API calls) */
   accessToken: string;
@@ -11,6 +11,21 @@ export interface AuthState {
 
   /** ChatGPT account ID extracted from JWT claims */
   accountId?: string;
+}
+
+/**
+ * Authenticated session — bundles the token state with optional
+ * persistent storage so the provider can refresh and save tokens
+ * automatically.
+ *
+ * Returned by `authenticate()` and passed to `createCodexOAuth()`.
+ */
+export interface Auth {
+  /** Current token state */
+  state: AuthState;
+
+  /** If provided, refreshed tokens are persisted here automatically */
+  storage?: import("../storage/types.js").TokenStorage;
 }
 
 /** Raw token response from the OAuth token endpoint */

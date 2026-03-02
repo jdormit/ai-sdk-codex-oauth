@@ -1,17 +1,16 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import type { AuthState } from "../oauth/types.js";
-import type { TokenStorage } from "../storage/types.js";
+import type { Auth } from "../oauth/types.js";
 import { createCodexFetch } from "./codex-fetch.js";
 import { validateModelId } from "./models.js";
 import { CODEX_BASE_URL } from "../constants.js";
 
 export interface CodexOAuthSettings {
   /**
-   * Authentication source. Provide either:
-   * - An AuthState object (static, token refresh handled internally)
-   * - A TokenStorage instance (tokens loaded and persisted automatically)
+   * Authentication object returned by `authenticate()`.
+   * Bundles the token state with optional persistent storage
+   * so the provider can refresh and save tokens automatically.
    */
-  auth: AuthState | TokenStorage;
+  auth: Auth;
 
   /** App identifier sent in the `originator` header (default: "ai-sdk-codex-oauth") */
   originator?: string;
@@ -46,7 +45,11 @@ export interface CodexOAuthProvider {
  * import { authenticate, createCodexOAuth } from "ai-sdk-codex-oauth";
  * import { generateText } from "ai";
  *
- * const auth = await authenticate({ openBrowser: true });
+ * const auth = await authenticate({
+ *   onUserCode: ({ userCode, verifyUrl }) => {
+ *     console.log(`Go to ${verifyUrl} and enter: ${userCode}`);
+ *   },
+ * });
  * const codex = createCodexOAuth({ auth });
  *
  * const { text } = await generateText({
@@ -58,35 +61,11 @@ export interface CodexOAuthProvider {
 export function createCodexOAuth(
   settings: CodexOAuthSettings,
 ): CodexOAuthProvider {
-  // Determine auth source
-  const isTokenStorage =
-    settings.auth &&
-    typeof settings.auth === "object" &&
-    "load" in settings.auth &&
-    typeof settings.auth.load === "function";
-
-  let authState: AuthState | null = isTokenStorage ? null : (settings.auth as AuthState);
-  const storage = isTokenStorage ? (settings.auth as TokenStorage) : undefined;
-
-  const getAuth = async (): Promise<AuthState> => {
-    if (storage) {
-      const loaded = await storage.load();
-      if (!loaded) {
-        throw new Error(
-          "No stored auth state. Call authenticate() first.",
-        );
-      }
-      return loaded;
-    }
-    if (!authState) {
-      throw new Error("Not authenticated");
-    }
-    return authState;
-  };
+  const { auth } = settings;
 
   const codexFetch = createCodexFetch({
-    getAuth,
-    storage,
+    getAuth: async () => auth.state,
+    storage: auth.storage,
     originator: settings.originator,
   });
 

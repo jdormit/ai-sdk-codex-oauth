@@ -1,4 +1,4 @@
-import type { AuthState } from "./types.js";
+import type { Auth } from "./types.js";
 import type { TokenStorage } from "../storage/types.js";
 import { MemoryStorage } from "../storage/memory.js";
 import { initiateDeviceAuth, pollDeviceAuth } from "./device-flow.js";
@@ -41,11 +41,12 @@ export interface AuthenticateOptions {
  * 2. If tokens are expired, attempts a refresh → returns on success
  * 3. Otherwise, initiates the device code flow and waits for user authorization
  *
- * Returns the authenticated state, which is also persisted to storage.
+ * Returns an `Auth` object bundling the token state with storage,
+ * which should be passed directly to `createCodexOAuth()`.
  */
 export async function authenticate(
   options: AuthenticateOptions,
-): Promise<AuthState> {
+): Promise<Auth> {
   const {
     onUserCode,
     storage = new MemoryStorage(),
@@ -56,10 +57,15 @@ export async function authenticate(
   } = options;
   const clientId = OAUTH_CLIENT_ID;
 
+  const makeAuth = (state: ReturnType<typeof buildAuthState>): Auth => ({
+    state,
+    storage,
+  });
+
   // Step 1: Check for existing valid tokens
   const existing = await storage.load();
   if (existing && existing.expiresAt > Date.now() + 60_000) {
-    return existing;
+    return makeAuth(existing);
   }
 
   // Step 2: Try refreshing expired tokens
@@ -68,7 +74,7 @@ export async function authenticate(
     const refreshed = await refreshAuthState(existing, clientId);
     if (refreshed) {
       await storage.save(refreshed);
-      return refreshed;
+      return makeAuth(refreshed);
     }
     // Refresh failed — fall through to device code flow
     await storage.clear();
@@ -106,9 +112,9 @@ export async function authenticate(
     throw new Error("Failed to exchange authorization code for tokens");
   }
 
-  const auth = buildAuthState(tokens);
-  await storage.save(auth);
-  return auth;
+  const state = buildAuthState(tokens);
+  await storage.save(state);
+  return makeAuth(state);
 }
 
 /**

@@ -1,14 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { createCodexOAuth } from "../src/provider/codex-provider.js";
 import { MemoryStorage } from "../src/storage/memory.js";
-import type { AuthState } from "../src/oauth/types.js";
+import type { Auth, AuthState } from "../src/oauth/types.js";
 
-const validAuth: AuthState = {
+const validState: AuthState = {
   accessToken: "test-token",
   refreshToken: "test-refresh",
   expiresAt: Date.now() + 3600_000,
   accountId: "acct-123",
 };
+
+const validAuth: Auth = { state: validState };
 
 describe("createCodexOAuth", () => {
   it("creates a callable provider", () => {
@@ -45,12 +47,13 @@ describe("createCodexOAuth", () => {
     expect(codex.languageModel).toBe(codex);
   });
 
-  it("accepts a TokenStorage as auth source", async () => {
+  it("includes storage from Auth object", async () => {
     const storage = new MemoryStorage();
-    await storage.save(validAuth);
+    await storage.save(validState);
 
-    const codex = createCodexOAuth({ auth: storage });
-    // Should not throw — storage has valid auth
+    const auth: Auth = { state: validState, storage };
+    const codex = createCodexOAuth({ auth });
+    // Should not throw
     const model = codex("gpt-5.3-codex");
     expect(model).toBeDefined();
   });
