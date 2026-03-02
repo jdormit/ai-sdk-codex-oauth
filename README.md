@@ -92,12 +92,6 @@ const codex = createCodexOAuth({
 
   // Optional: identifier sent in the `originator` header (default: "ai-sdk-codex-oauth")
   originator: "my-app",
-
-  // Optional: custom base URL
-  baseURL: "https://chatgpt.com/backend-api/codex",
-
-  // Optional: OAuth client ID for token refresh
-  clientId: "app_EMoamEEZ73f0CkXaXp7hrann",
 });
 ```
 

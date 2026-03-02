@@ -1,7 +1,6 @@
 import type { AuthState } from "../oauth/types.js";
 import type { TokenStorage } from "../storage/types.js";
 import { refreshAuthState } from "../oauth/token.js";
-import { OAUTH_CLIENT_ID } from "../constants.js";
 
 export interface CodexFetchOptions {
   /** Function that returns the current auth state */
@@ -12,9 +11,6 @@ export interface CodexFetchOptions {
 
   /** App identifier for the originator header */
   originator?: string;
-
-  /** OAuth client ID for token refresh */
-  clientId?: string;
 
   /** Underlying fetch implementation (default: globalThis.fetch) */
   baseFetch?: typeof globalThis.fetch;
@@ -33,7 +29,6 @@ export function createCodexFetch(options: CodexFetchOptions): typeof globalThis.
     getAuth,
     storage,
     originator = "ai-sdk-codex-oauth",
-    clientId = OAUTH_CLIENT_ID,
     baseFetch = globalThis.fetch,
   } = options;
 
@@ -45,7 +40,7 @@ export function createCodexFetch(options: CodexFetchOptions): typeof globalThis.
 
     // Refresh if token expires within 60 seconds
     if (auth.expiresAt < Date.now() + 60_000) {
-      const refreshed = await refreshAuthState(auth, clientId);
+      const refreshed = await refreshAuthState(auth);
       if (!refreshed) {
         throw new Error("Token refresh failed — please re-authenticate");
       }

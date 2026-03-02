@@ -1,6 +1,6 @@
 {
   "name": "ai-sdk-codex-oauth",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Vercel AI SDK provider for ChatGPT Codex backend via OAuth device code flow",
   "type": "module",
   "main": "./dist/index.cjs",

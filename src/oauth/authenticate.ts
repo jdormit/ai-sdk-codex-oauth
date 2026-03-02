@@ -15,9 +15,6 @@ export interface AuthenticateOptions {
   /** Where to persist tokens. Defaults to in-memory. */
   storage?: TokenStorage;
 
-  /** OAuth client ID (default: Codex CLI client ID) */
-  clientId?: string;
-
   /**
    * Automatically open the verification URL in the default browser.
    * - Node.js: uses dynamic `import('open')` — install `open` as a dependency
@@ -52,12 +49,12 @@ export async function authenticate(
   const {
     onUserCode,
     storage = new MemoryStorage(),
-    clientId = OAUTH_CLIENT_ID,
     openBrowser = false,
     onStatus,
     signal,
     timeoutMs,
   } = options;
+  const clientId = OAUTH_CLIENT_ID;
 
   // Step 1: Check for existing valid tokens
   const existing = await storage.load();

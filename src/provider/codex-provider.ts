@@ -15,12 +15,6 @@ export interface CodexOAuthSettings {
 
   /** App identifier sent in the `originator` header (default: "ai-sdk-codex-oauth") */
   originator?: string;
-
-  /** OAuth client ID for token refresh (default: Codex CLI client ID) */
-  clientId?: string;
-
-  /** Custom base URL (default: https://chatgpt.com/backend-api/codex) */
-  baseURL?: string;
 }
 
 /**
@@ -94,12 +88,11 @@ export function createCodexOAuth(
     getAuth,
     storage,
     originator: settings.originator,
-    clientId: settings.clientId,
   });
 
   const openai = createOpenAI({
     name: "codex-oauth",
-    baseURL: settings.baseURL ?? CODEX_BASE_URL,
+    baseURL: CODEX_BASE_URL,
     // Placeholder — real auth is injected by codexFetch
     apiKey: "oauth-managed",
     fetch: codexFetch,
