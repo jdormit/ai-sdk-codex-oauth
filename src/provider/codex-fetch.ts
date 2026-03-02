@@ -73,6 +73,15 @@ export function createCodexFetch(options: CodexFetchOptions): typeof globalThis.
     if (auth.accountId) {
       existingHeaders.set("ChatGPT-Account-Id", auth.accountId);
     }
+
+    // Remove user-agent header. The AI SDK sets this explicitly
+    // (e.g. "ai-sdk/openai/1.x ai-sdk/provider-utils/2.x runtime/browser"),
+    // which forces browsers to include it in the CORS preflight
+    // Access-Control-Request-Headers. The Codex backend doesn't allow it,
+    // causing the preflight to fail. Deleting it lets the browser use its
+    // built-in UA string instead, which doesn't appear in the preflight.
+    existingHeaders.delete("user-agent");
+
     newInit.headers = existingHeaders;
 
     // Modify request body if present
@@ -90,6 +99,11 @@ export function createCodexFetch(options: CodexFetchOptions): typeof globalThis.
         // Strip unsupported parameters
         delete body["temperature"];
         delete body["max_tokens"];
+
+        // Ensure instructions is present (Codex backend requires it)
+        if (body["instructions"] == null) {
+          body["instructions"] = "";
+        }
 
         newInit.body = JSON.stringify(body);
       } catch {

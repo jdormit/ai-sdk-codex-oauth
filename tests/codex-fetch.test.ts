@@ -343,4 +343,88 @@ describe("createCodexFetch", () => {
     expect(json.id).toBe("resp_unknown");
     expect(json.output).toEqual([]);
   });
+
+  it("injects empty instructions when not present (Codex backend requires it)", async () => {
+    mockBaseFetch.mockResolvedValue(
+      new Response("{}", {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const codexFetch = createCodexFetch({
+      getAuth: async () => validAuth,
+      baseFetch: mockBaseFetch,
+    });
+
+    await codexFetch("https://example.com/responses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "gpt-5.3-codex", input: [], stream: true }),
+    });
+
+    const call = mockBaseFetch.mock.calls[0]!;
+    const body = JSON.parse(call[1]?.body as string);
+    expect(body.instructions).toBe("");
+  });
+
+  it("preserves existing instructions when already set", async () => {
+    mockBaseFetch.mockResolvedValue(
+      new Response("{}", {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const codexFetch = createCodexFetch({
+      getAuth: async () => validAuth,
+      baseFetch: mockBaseFetch,
+    });
+
+    await codexFetch("https://example.com/responses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-5.3-codex",
+        input: [],
+        stream: true,
+        instructions: "You are a pirate.",
+      }),
+    });
+
+    const call = mockBaseFetch.mock.calls[0]!;
+    const body = JSON.parse(call[1]?.body as string);
+    expect(body.instructions).toBe("You are a pirate.");
+  });
+
+  it("strips the user-agent header to avoid CORS preflight failures", async () => {
+    mockBaseFetch.mockResolvedValue(
+      new Response("{}", {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const codexFetch = createCodexFetch({
+      getAuth: async () => validAuth,
+      baseFetch: mockBaseFetch,
+    });
+
+    // Simulate what the AI SDK does: set a user-agent header
+    await codexFetch("https://example.com/responses", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "user-agent": "ai-sdk/openai/1.3.22 ai-sdk/provider-utils/2.2.8 runtime/browser",
+      },
+      body: JSON.stringify({ model: "gpt-5.3-codex", input: [], stream: true }),
+    });
+
+    const call = mockBaseFetch.mock.calls[0]!;
+    const headers = call[1]?.headers as Headers;
+    expect(headers.has("user-agent")).toBe(false);
+    // But other headers should still be present
+    expect(headers.get("Authorization")).toBe("Bearer test-token");
+    expect(headers.get("originator")).toBe("ai-sdk-codex-oauth");
+  });
 });

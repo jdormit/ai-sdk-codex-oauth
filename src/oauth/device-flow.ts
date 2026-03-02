@@ -87,15 +87,22 @@ export async function pollDeviceAuth(
 
     await sleep(intervalMs, signal);
 
-    const response = await fetch(DEVICE_TOKEN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        device_auth_id: deviceAuthId,
-        user_code: userCode,
-      }),
-      signal,
-    });
+    let response: Response;
+    try {
+      response = await fetch(DEVICE_TOKEN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          device_auth_id: deviceAuthId,
+          user_code: userCode,
+        }),
+        signal,
+      });
+    } catch {
+      // Network error — treat as pending and retry
+      onStatus?.("Waiting for authorization...");
+      continue;
+    }
 
     if (response.status === 200) {
       return (await response.json()) as DeviceTokenSuccessResponse;
