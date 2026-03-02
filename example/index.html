@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Codex OAuth Chat</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Login screen -->
+      <div id="login-screen" class="screen">
+        <h1>Codex OAuth Chat</h1>
+        <p class="subtitle">
+          Chat with OpenAI models using your ChatGPT subscription.
+        </p>
+        <button id="login-btn">Login with ChatGPT</button>
+        <div id="login-status" class="status" hidden></div>
+        <div id="device-code" hidden>
+          <p>Enter this code at the link below:</p>
+          <div class="code-display" id="user-code"></div>
+          <a id="verify-link" href="#" target="_blank" rel="noopener">Open verification page</a>
+          <p class="hint">Waiting for authorization...</p>
+        </div>
+      </div>
+
+      <!-- Chat screen -->
+      <div id="chat-screen" class="screen" hidden>
+        <header>
+          <h1>Codex Chat</h1>
+          <div class="header-controls">
+            <select id="model-select"></select>
+            <button id="logout-btn" title="Logout">Logout</button>
+          </div>
+        </header>
+        <div id="messages"></div>
+        <form id="chat-form">
+          <textarea
+            id="chat-input"
+            placeholder="Type a message... (Enter to send, Shift+Enter for newline)"
+            rows="1"
+          ></textarea>
+          <button type="submit" id="send-btn">Send</button>
+        </form>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
