@@ -1,6 +1,6 @@
 {
   "name": "ai-sdk-codex-oauth",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Vercel AI SDK provider for ChatGPT Codex backend via OAuth device code flow",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -56,5 +56,13 @@
     "provider",
     "device-code-flow"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jdormit/ai-sdk-codex-oauth.git"
+  },
+  "homepage": "https://github.com/jdormit/ai-sdk-codex-oauth#readme",
+  "bugs": {
+    "url": "https://github.com/jdormit/ai-sdk-codex-oauth/issues"
+  }
 }
