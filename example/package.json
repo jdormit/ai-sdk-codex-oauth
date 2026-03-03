@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "ai": "^4.3.16",
+    "ai": "^6.0.0",
     "ai-sdk-codex-oauth": "file:.."
   },
   "devDependencies": {
